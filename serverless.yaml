@@ -1,0 +1,140 @@
+service: ecommerce-item-manager
+
+frameworkVersion: '>=2.1.0 <3.0.0'
+variablesResolutionMode: '20210326'
+
+custom:
+  ebayItemTableName: 'ebay-item-table-${self:provider.stage}'
+
+package:
+  individually: true
+  patterns:
+    - '!node_modules/**'
+    - '!serverless.yaml'
+    - '!.serverless/**'
+    - '!.prettierrc'
+    - '!gulpfile.js'
+    - '!package.json'
+    - '!package-lock.json'
+    - '!README.md'
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: dev
+  profile: ecommerce-item-manager
+  region: us-east-1
+  lambdaHashingVersion: '20201221'
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource: 'arn:aws:dynamodb:us-east-1:*:*'
+
+        - Effect: Allow
+          Action:
+            - 'logs:CreateLogGroup'
+            - 'logs:CreateLogStream'
+            - 'logs:PutLogEvents'
+          Resource: 'arn:aws:logs:us-east-1:*:*'
+
+        - Effect: Allow
+          Action:
+            - 's3:ListBucket'
+            - 's3:PutObject'
+            - 's3:GetObject'
+            - 's3:DeleteObject'
+          Resource: '*'
+
+        - Effect: Allow
+          Action:
+            - 'ssm:GetParameters'
+            - 'ssm:DescribeParameters'
+          Resource: 'arn:aws:ssm:us-east-1:*:*'
+
+        - Effect: Allow
+          Action:
+            - 'kms:Decrypt'
+          Resource: '*'
+
+  environment:
+    EBAY_TABLE: ${self:custom.ebayItemTableName}
+
+functions:
+  ebayItemSync:
+    handler: src/ecommerceLambdas/ebay.handler
+    timeout: 30
+    package:
+      patterns:
+        - '!src/**'
+        - '!test/**'
+        - 'src/ecommerceLambdas/ebay.js'
+
+        # packages needed for ebay oauth sdk
+        - 'node_modules/ebay-oauth-nodejs-client/**'
+        - 'node_modules/querystring/**'
+
+        # packages needed for axios
+        - 'node_modules/axios/**'
+        - 'node_modules/follow-redirects/**'
+
+    environment:
+      EBAY_APP_CLIENT_ID: ${ssm:/keys/ebay/AppClientId}
+      EBAY_DEV_ID: ${ssm:/keys/ebay/DevId}
+      EBAY_CERT_ID: ${ssm:/keys/ebay/CertId}
+      EBAY_BUCKET_NAME: !Ref EbayItemBucket
+    events:
+      - schedule: rate(7 days)
+
+resources:
+  Resources:
+    ## S3
+    EbayItemBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        AccessControl: Private
+      DeletionPolicy: Retain
+    BucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        PolicyDocument:
+          Id: MyPolicy
+          Version: '2012-10-17'
+          Statement:
+            - Sid: PublicReadForGetBucketObjects
+              Effect: Allow
+              Principal: '*'
+              Action: 's3:GetObject'
+              Resource: !Join
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref EbayItemBucket
+                  - /*
+        Bucket: !Ref EbayItemBucket
+
+    ## Dynamo
+    ebayItemTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.ebayItemTableName}
+        AttributeDefinitions:
+          - AttributeName: itemId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: itemId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 2
+          WriteCapacityUnits: 2
+
+  Outputs:
+    EbayItemBucketName:
+      Value: !Ref EbayItemBucket
+      Description: S3 Bucket for storage of itemIds

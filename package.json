@@ -1,13 +1,33 @@
 {
-    "name": "hello-world",
-    "description": "Sample NodeJs web application",
-    "version": "0.0.1",
-    "private": true,
-    "devDependencies": {
-        "mocha": "5.0.0",
-        "unit.js": "2.0.0"
-    },
-    "scripts": {
-        "test": "mocha --recursive tests"
-    }
+  "name": "ecommerceitemmanager",
+  "version": "1.0.4",
+  "description": "Ecommerce Item Manager",
+  "main": "index.js",
+  "scripts": {
+    "deploy": "serverless deploy",
+    "configureSSM": "node ./src/scripts/configureSSM",
+    "lint": "eslint ./src/**/*.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KevinGay/EcommerceItemManager.git"
+  },
+  "author": "KG",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/KevinGay/EcommerceItemManager/issues"
+  },
+  "homepage": "https://github.com/KevinGay/EcommerceItemManager#readme",
+  "dependencies": {
+    "aws-sdk": "^2.889.0",
+    "axios": "^0.21.1",
+    "ebay-oauth-nodejs-client": "^1.2.1",
+    "inquirer": "^8.0.0",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "prettier": "^2.2.1",
+    "serverless": "^2.37.2"
+  }
 }

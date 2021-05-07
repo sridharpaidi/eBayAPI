@@ -1,64 +1,25 @@
-Welcome to the AWS CodeStar sample web application
-==================================================
+Ecommerce Item Manager
 
-This sample code helps get you started with a simple Node.js web service deployed by AWS CloudFormation to AWS Lambda and Amazon API Gateway.
+The purpose of this project is to retrieve data for each given eBay itemId and then store it in a database.
 
-What's Here
------------
+eBay is used as a POC, but this can be extended to other ecommerce websites, like Macys, Nordstrom, Amazon, etc.
 
-This sample includes:
+This npm package only serves to deploy the infrastructure and code that will run on the lambda function(s). The code that is run on the lambdas can be found in src/ecommerceLambdas.
 
-* README.md - this file
-* buildspec.yml - this file is used by AWS CodeBuild to package your
-  application for deployment to AWS Lambda
-* index.js - this file contains the sample Node.js code for the web service
-* template.yml - this file contains the AWS Serverless Application Model (AWS SAM) used
-  by AWS CloudFormation to deploy your application to AWS Lambda and Amazon API
-  Gateway.
-* tests/ - this directory contains unit tests for your application
-* template-configuration.json - this file contains the project ARN with placeholders used for tagging resources with the project ID
+Setting up development environment:
 
-What Do I Do Next?
-------------------
+- Ensure node is installed (preferably node v12.18.3)
+- The aws cli should be installed (easiest way is with pip - `pip install awscli`): https://docs.aws.amazon.com/cli/latest/userguide/install-cliv1.html
+- The aws cli should be configured with the credentials for your AWS account: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
+- There should be a profile in ~/.aws/credentials that has the name `ecommerce-item-manager` with the access key and
+  secret access key of the aws account that you want to the deploy the resources to
+- run `npm i` from the command line
+- Before deploying the infrastructure, upload your eBay API keys by using `npm run configureSSM`.
+- To deploy the infrastructure, run `npm run deploy`
 
-If you have checked out a local copy of your repository you can start making
-changes to the sample code.  We suggest making a small change to index.js first,
-so you can see how changes pushed to your project's repository are automatically
-picked up by your project pipeline and deployed to AWS Lambda and Amazon API Gateway.
-(You can watch the pipeline progress on your AWS CodeStar project dashboard.)
-Once you've seen how that works, start developing your own code, and have fun!
+To run:
 
-To run your tests locally, go to the root directory of the
-sample code and run the `npm test` command, which
-AWS CodeBuild also runs through your `buildspec.yml` file.
-
-To test your new code during the release process, modify the existing tests or
-add tests to the tests directory. AWS CodeBuild will run the tests during the
-build stage of your project pipeline. You can find the test results
-in the AWS CodeBuild console.
-
-Learn more about AWS CodeBuild and how it builds and tests your application here:
-https://docs.aws.amazon.com/codebuild/latest/userguide/concepts.html
-
-Learn more about AWS Serverless Application Model (AWS SAM) and how it works here:
-https://github.com/awslabs/serverless-application-model/blob/master/HOWTO.md
-
-AWS Lambda Developer Guide:
-https://docs.aws.amazon.com/lambda/latest/dg/deploying-lambda-apps.html
-
-Learn more about AWS CodeStar by reading the user guide, and post questions and
-comments about AWS CodeStar on our forum.
-
-User Guide: https://docs.aws.amazon.com/codestar/latest/userguide/welcome.html
-
-Forum: https://forums.aws.amazon.com/forum.jspa?forumID=248
-
-What Should I Do Before Running My Project in Production?
-------------------
-
-AWS recommends you review the security best practices recommended by the framework
-author of your selected sample application before running it in production. You
-should also regularly review and apply any available patches or associated security
-advisories for dependencies used within your application.
-
-Best Practices: https://docs.aws.amazon.com/codestar/latest/userguide/best-practices.html?icmpid=docs_acs_rm_sec
+1. Copy any new-line (\n) separated files with ebay itemIds to the ebay bucket(Ex name: ecommerce-item-manager-dev-ebayitembucket-yc8uxdpy2ab4). Example files can be found in test/sampleFiles. These will be picked up by the lambda and run whenever it is invoked.
+2. Invoke the lambda manually through the aws console, and that's it!
+3. The itemIds in the files will be used to query the eBay API, and the results will be parsed and stored in DynamoDB. Note: Any itemIds that already exist in Dynamo will be skipped.
+4. Once a particular file is completed, it will be moved to a /completed subdirectory in S3. The files in /completed will not be run by the Lambda anymore.
