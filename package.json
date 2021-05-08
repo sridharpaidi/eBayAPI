@@ -7,7 +7,8 @@
     "deploy": "serverless deploy",
     "configureSSM": "node ./src/scripts/configureSSM",
     "lint": "eslint ./src/**/*.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "package": "serverless package",
+    "test": "echo \"no tests\""
   },
   "repository": {
     "type": "git",
