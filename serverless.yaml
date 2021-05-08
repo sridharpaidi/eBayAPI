@@ -94,17 +94,6 @@ functions:
       - schedule: rate(7 days)
 
 resources:
-  Parameters:
-    ProjectId:
-      Type: String
-      Description: AWS CodeStar projectID used to associate new resources to team members
-    CodeDeployRole:
-      Type: String
-      Description: IAM role to allow AWS CodeDeploy to manage deployment of AWS Lambda functions
-
-  Transform:
-  - AWS::CodeStar
-
   Resources:
     ## S3
     EbayItemBucket:
